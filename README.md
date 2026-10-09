@@ -1,103 +1,161 @@
-# Internship & Job Opportunity Analyzer
+# Hermes Job Analyzer
 
-> **SerpApi India Hackathon 2026 entry — Track: Knowledge & Public Interest**
-> An analyzer that finds internships and entry-level developer jobs for students
-> in India, matches them against the student's profile, tracks deadlines and
-> duplicates, and delivers a deterministic ranked daily digest.
+**Find opportunities. Verify the evidence. Understand your fit. Never miss a deadline.**
 
-## What it does
+A full-stack MVP for the SerpApi India Hackathon 2026. It combines live Google Jobs discovery (when a SerpApi key is configured), explainable profile matching, field-level evidence checks, persistent application tracking, deadline reminders, and a deterministic digest.
 
+> **Honest scope note:** This is a competition-ready MVP foundation, not a security-audited production service. The implementation includes working core flows and clearly documents limitations. It does not claim an employer or job is legitimate merely because it appears on Google Jobs. Demo records are explicitly marked as demo data.
+
+## Features
+
+- React + TypeScript + Vite responsive dark dashboard.
+- FastAPI REST API with Swagger docs at `/docs`.
+- Registration, login, JWT authentication, hashed passwords, protected endpoints.
+- Persistent SQLAlchemy database; SQLite by default for easiest local setup, PostgreSQL supported through `DATABASE_URL`.
+- Career profile editing.
+- SerpApi `google_jobs` search through the backend only; API key never sent to the browser.
+- Job normalization, canonical URL/source ID deduplication, search history metadata, deterministic matching.
+- Opportunity evidence view with explicit unknown/missing/not-checked states and cautious URL checks.
+- Saved jobs and application tracker with private notes/statuses/deadlines.
+- Dashboard metrics, deadline center, deterministic digest, JSON export.
+- Seeded demo mode when no SerpApi key is configured.
+- Backend tests for matching, normalization, and API basics.
+
+## Requirements
+
+- Python 3.11+
+- Node.js 20+ and npm
+- A SerpApi account/API key for live job search (optional for demo mode)
+- PostgreSQL optional; SQLite is the default
+
+## Quick start (Windows PowerShell)
+
+1. Extract the ZIP and open a terminal in the `HermesJobAnalyzer` folder.
+2. Backend:
+
+```powershell
+cd backend
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+Copy-Item .env.example .env
+uvicorn app.main:app --reload
 ```
-Live job leads (SerpApi Google Jobs)
-  → normalize + dedupe → opportunity database
-  → profile matching (Strong / Moderate / Partial / Low)
-  → verification pass ("verify before applying")
-  → deterministic daily digest: ranked Top 5, why-apply reasons,
-    verification notes, deadline watch
+
+3. In a second terminal, frontend:
+
+```powershell
+cd frontend
+npm install
+Copy-Item .env.example .env
+npm run dev
 ```
 
-The digest format is fixed and deterministic — the same database always
-produces the same report. No LLM is required to run the pipeline.
+4. Open the URL printed by Vite (normally `http://localhost:5173`). Backend docs: `http://localhost:8000/docs`.
 
-## SerpApi usage (meaningful use)
-
-Live data enters through `scripts/serpapi_jobs_fetcher.py`, which queries
-SerpApi's **`google_jobs`** engine with targeted queries
-(`AI intern India`, `machine learning intern India`, `data science intern
-India`, …):
-
-- Every result is normalized into the opportunity database and tagged
-  `source="serpapi"`.
-- Every SerpApi record is stored with `status="needs-verification"`, so it
-  appears in the digest **marked for verification** and can never reach the
-  ranked Top 5 until the verification pass clears it.
-- Dedupe is on company + role + application URL — re-runs import zero
-  duplicates.
-- The API key comes from the `SERPAPI_API_KEY` environment variable; it is
-  never written into code, docs, or git.
-
-Without SerpApi the pipeline has no live inlet — search data is what makes
-the digest fresh every day.
-
-## Setup (stdlib only — no `pip install`)
-
-Requirements: Python 3.10+.
+### macOS/Linux
 
 ```bash
-git clone https://github.com/xebeczz/HermesJobAnalyzer-.git
-cd HermesJobAnalyzer-
-
-# free signup at https://serpapi.com (250 search credits/month for building)
-export SERPAPI_API_KEY="your-key-here"
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload
 ```
 
-## Usage
+In another terminal:
 
 ```bash
-# 1. Preview what SerpApi returns (no DB changes, no credits wasted on imports)
-python3 scripts/serpapi_jobs_fetcher.py --dry-run
-
-# 2. Import fresh leads as needs-verification
-python3 scripts/serpapi_jobs_fetcher.py --import
-
-# 3. Full pipeline: live fetch, then the deterministic digest
-./scripts/run_pipeline_with_serpapi.sh
-
-# 4. Digest on its own (works with or without fresh SerpApi data)
-python3 scripts/job_digest.py
-
-# 5. Inspect the opportunity DB
-python3 scripts/opportunity_store.py list
-python3 scripts/opportunity_store.py deadlines --within-days 14
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-## Project structure
+## Configure live SerpApi search
 
+1. Create an account at https://serpapi.com/ and copy your API key from your dashboard.
+2. Put it only in `backend/.env` as `SERPAPI_API_KEY=your_real_key_here`.
+3. Restart the backend. The UI will report whether live search is configured.
+4. Search requests are sent to Hermes (`POST /api/search`); only the backend contacts SerpApi.
+
+Never commit `.env` or paste the key into frontend variables. Vite variables are public in browser bundles. The `.env.example` contains placeholders only.
+
+## Demo mode
+
+Without a key, search returns a small set of clearly marked synthetic demonstration opportunities. They are not real job leads. Use this mode to explore the workflow at a hackathon venue with unreliable internet or before configuring SerpApi.
+
+## Environment variables
+
+See `backend/.env.example`. The backend loads this file automatically from its working directory. Important values:
+
+- `DATABASE_URL`: defaults to local SQLite (`sqlite:///./hermes.db`). PostgreSQL example: `postgresql+psycopg://hermes:password@localhost:5432/hermes`.
+- `SECRET_KEY`: change to a long random secret outside local demos.
+- `SERPAPI_API_KEY`: optional for demo, required for live search.
+- `CORS_ORIGINS`: comma-separated frontend origins.
+- `DEMO_MODE`: demo fallback flag.
+
+## Tests
+
+```bash
+cd backend
+pytest -q
 ```
-├── config/
-│   ├── profile.yaml            # student profile — the matching source of truth
-│   ├── analyzer.yaml           # digest time, timezone, keywords, thresholds
-│   └── company_watchlist.yaml  # 15 product companies with official careers URLs
-├── scripts/
-│   ├── serpapi_jobs_fetcher.py     # ★ SerpApi Google Jobs inlet (stdlib only)
-│   ├── run_pipeline_with_serpapi.sh# fetch → digest, one command
-│   ├── opportunity_store.py        # opportunity DB: add/list/get/deadlines
-│   ├── job_digest.py               # deterministic 24h digest builder
-│   ├── job_deadline_watch.py       # deadline watch (silent unless urgent)
-│   └── telegram_send.py            # Telegram delivery (optional)
-├── .hermes/skills/internship-job-analyzer/SKILL.md  # analyzer operating spec
-└── README.md
+Tests use synthetic/mocked data and do not consume SerpApi credits.
+
+## API overview
+
+- `POST /api/auth/register`, `/api/auth/login`; `GET /api/auth/me`
+- `GET/PUT /api/profile`
+- `POST /api/search`, `GET /api/search/history`
+- `GET /api/opportunities`, `GET /api/opportunities/{id}`, `POST/DELETE /api/opportunities/{id}/save`
+- `GET/POST/PATCH/DELETE /api/applications`
+- `GET /api/dashboard`, `GET /api/reminders`, `GET /api/digests/latest`
+- `GET /api/verification/summary`, `POST /api/opportunities/{id}/verify`
+- `GET /api/export`, `DELETE /api/account`
+
+FastAPI's `/docs` is the interactive API reference. Responses use standard HTTP status codes and Pydantic validation.
+
+## Architecture
+
+```text
+frontend (React / TypeScript)
+        | JSON REST requests + Bearer token
+        v
+backend/app/main.py (FastAPI routing + validation)
+        | SQLAlchemy ORM
+        v
+SQLite local DB / PostgreSQL configured DB
+        |
+        +-- matching service (deterministic score and reasons)
+        +-- normalization + deduplication
+        +-- verification checks (cautious, field-level)
+        +-- digest/deadline calculations
+        +-- SerpApi client (server-side only)
 ```
 
-`data/` (the live opportunity DB) and `reports/` (archived digests) are
-git-ignored — they are generated at runtime.
+The MVP keeps business rules in backend helpers, not duplicated in the UI. The frontend is a presentation layer that consumes API responses. The initial implementation uses a compact module layout to make the first setup approachable; it can be split into the fuller module structure in `docs/ARCHITECTURE.md` as the project grows.
 
-## Disclosure
+## Important limitations (be transparent in the competition)
 
-- **Existing project, extended for the hackathon.** The analyzer (profile
-  matching, digest, deadline watch) was built in October 2026; the SerpApi
-  Google Jobs integration was added as the live-data inlet for this entry.
-- **AI tools used:** built with Muse (Meta's personal AI agent), which also
-  wrote the fetcher, the pipeline script, and this README.
-- **Track:** Knowledge & Public Interest — "use Google Jobs results to help
-  people find their first developer role."
+- Google Jobs results do not always include deadlines, salaries, direct application URLs, or stable IDs. Unknown fields remain unknown.
+- The verification endpoint performs conservative syntactic and DNS/IP safety checks; it does **not** prove that an employer or listing is genuine. It intentionally avoids unrestricted server-side page fetching to reduce SSRF risk.
+- The MVP includes in-app deadline calculations but not a continuously running scheduler, email delivery, password reset, resume upload/parsing, or full audit-log UI.
+- JWT bearer tokens are stored in browser local storage for this local demo, which is simpler but weaker than production-grade HttpOnly cookie sessions. Do not use this configuration as-is for sensitive production data.
+- Rate limiting, CSRF hardening, managed secrets, migrations, observability, and deployment hardening should be added before a public production launch.
+- Demo data is synthetic and visually labelled. Never cite it as real market data.
+
+## Three-minute demo script
+
+1. **0:00–0:25 — Problem and dashboard:** Explain that job discovery, trust, fit, and deadlines are fragmented. Show live/demo mode label and the real dashboard metrics.
+2. **0:25–0:55 — Search:** Search “Python developer internship” and show the source label. Explain that the frontend calls Hermes and the backend calls SerpApi only when configured.
+3. **0:55–1:25 — Explainable fit:** Open a job, inspect matched/missing skills and why the score was assigned. Stress that a score is compatibility, not hiring probability.
+4. **1:25–1:55 — Evidence & Trust:** Show supported, missing, and not-checked fields. Explain why unknown deadlines are never fabricated and Google Jobs is not an employer verification service.
+5. **1:55–2:30 — Application pipeline:** Save a role, add an application, set a user-entered follow-up/deadline, and change its status.
+6. **2:30–3:00 — Digest and differentiation:** Show deadline summary and deterministic digest. Close with evidence-based trust, freshness awareness, explainable matching, and persistent workflow.
+
+## Competition and AI-use disclosure
+
+This codebase was generated with AI assistance from the requirements supplied by the project owner. Review, test, understand, and adapt it before submission. Follow the competition's current AI-use disclosure and originality rules. Do not claim code, research, verification, or live API results that you have not personally checked.
