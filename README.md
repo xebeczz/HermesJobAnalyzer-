@@ -48,7 +48,7 @@ git clone https://github.com/xebeczz/HermesJobAnalyzer-.git
 cd HermesJobAnalyzer-
 
 # free signup at https://serpapi.com (250 search credits/month for building)
-export SERPAPI_API_KEY="f03d798be95d8c75378051f2d67ffc97d6d43a9ed30a2e4095d7e710c018681d"
+export SERPAPI_API_KEY="your-key-here"
 ```
 
 ## Usage
