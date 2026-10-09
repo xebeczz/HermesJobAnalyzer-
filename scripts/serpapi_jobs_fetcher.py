@@ -65,22 +65,32 @@ def serpapi_search(api_key: str, query: str, location: str) -> dict:
     return payload
 
 
+def _as_dict(value) -> dict:
+    """SerpApi fields like `extensions` may be a list in live responses."""
+    return value if isinstance(value, dict) else {}
+
+
 def normalize_job(job: dict, fetched_on: str) -> dict:
     """Convert one SerpApi google_jobs result into the opportunity DB shape."""
     company = job.get("company_name") or "Unknown"
     title = job.get("title") or "Untitled"
     location = job.get("location") or "India"
     job_id = str(job.get("job_id") or slugify(company, title, fetched_on))
+    extensions = _as_dict(job.get("extensions"))
+    detected = _as_dict(job.get("detected_extensions"))
+    related = job.get("related_links") or [{}]
+    first_link = related[0] if isinstance(related, list) and related else {}
+    app_url = first_link.get("link", "") if isinstance(first_link, dict) else ""
     record = {
         "id": f"opp-serpapi-{job_id}",
-        "dedupe_key": dedupe_key(company, title, job.get("related_links", [{}])[0].get("link", "")),
+        "dedupe_key": dedupe_key(company, title, app_url),
         "company": company,
         "role": title,
         "opportunity_type": "Internship" if "intern" in title.lower() else "Job",
         "location": location,
         "work_mode": "Not specified",
         "duration": "Not specified",
-        "stipend": job.get("extensions", {}).get("salary") or "Not specified",
+        "stipend": extensions.get("salary") or "Not specified",
         "salary": "Not specified",
         "eligibility": {
             "academic_year": "Not specified",
@@ -93,7 +103,7 @@ def normalize_job(job: dict, fetched_on: str) -> dict:
         "skills_required": {"technical": [], "other": ["Not specified"]},
         "responsibilities": "Not specified",
         "deadline": None,
-        "application_url": (job.get("related_links") or [{}])[0].get("link") or "",
+        "application_url": app_url,
         "official_url": "",
         "recruiter_info": job.get("via") or "Not specified",
         "conditions": "Not specified",
@@ -111,10 +121,9 @@ def normalize_job(job: dict, fetched_on: str) -> dict:
         "status": "needs-verification",
         "serpapi_raw": {
             "job_id": job.get("job_id"),
-            "posted_at": job.get("detected_extensions", {}).get("posted_at")
-            or job.get("extensions", {}).get("posted"),
-            "schedule_type": job.get("detected_extensions", {}).get("schedule_type"),
-            "work_from_home": job.get("detected_extensions", {}).get("work_from_home"),
+            "posted_at": detected.get("posted_at") or extensions.get("posted"),
+            "schedule_type": detected.get("schedule_type"),
+            "work_from_home": detected.get("work_from_home"),
             "thumbnail": job.get("thumbnail"),
             "description_snippet": (job.get("description") or "")[:600],
         },
