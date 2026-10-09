@@ -1,0 +1,86 @@
+# Product-based company watchlist for the Internship & Job Opportunity Analyzer.
+#
+# These are the official careers/internship pages the scout checks for new
+# openings relevant to the profile in config/profile.yaml. Only official
+# company domains are listed here — never third-party job boards.
+#
+# The daily digest automatically includes any watchlist opportunity that gets
+# ingested into data/opportunities.json. Ongoing automated scouting runs via
+# the (currently paused) "Company Scout" cron job; it needs a working
+# inference provider on the gateway before it can run.
+
+companies:
+  - name: Google
+    careers_url: https://careers.google.com/jobs/results/
+    internship_url: https://buildyourfuture.withgoogle.com/programs/step/
+    focus: [SWE Intern, STEP Intern, AI/ML roles]
+
+  - name: Microsoft
+    careers_url: https://jobs.careers.microsoft.com/global/en/search
+    internship_url: https://jobs.careers.microsoft.com/global/en/search?q=intern
+    focus: [SWE Intern, Explore Intern, Data Science]
+
+  - name: Amazon
+    careers_url: https://www.amazon.jobs/en/search
+    internship_url: https://www.amazon.jobs/en/search?base_query=intern
+    focus: [SDE Intern, Data Science Intern, ML roles]
+
+  - name: Meta
+    careers_url: https://www.metacareers.com/jobs/
+    internship_url: https://www.metacareers.com/jobs/?q=intern
+    focus: [SWE Intern, ML/Data roles]
+
+  - name: Apple
+    careers_url: https://jobs.apple.com/en-in/search
+    internship_url: https://jobs.apple.com/en-in/search?search=intern
+    focus: [SWE Intern, ML/AI roles]
+
+  - name: Netflix
+    careers_url: https://jobs.netflix.net/search
+    internship_url: https://jobs.netflix.net/search
+    focus: [SWE Intern]
+
+  - name: Adobe
+    careers_url: https://careers.adobe.com/us/en/search-results
+    internship_url: https://careers.adobe.com/us/en/search-results?keywords=intern
+    focus: [SWE Intern, Data Science Intern]
+
+  - name: Salesforce
+    careers_url: https://careers.salesforce.com/en/jobs/
+    internship_url: https://careers.salesforce.com/en/jobs/?keywords=intern
+    focus: [SWE Intern, AMTS]
+
+  - name: Oracle
+    careers_url: https://www.oracle.com/corporate/careers/
+    internship_url: https://www.oracle.com/corporate/careers/
+    focus: [SWE Intern]
+
+  - name: NVIDIA
+    careers_url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+    internship_url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite?q=intern
+    focus: [SWE Intern, AI/ML Intern]
+
+  - name: Intel
+    careers_url: https://jobs.intel.com/en/search-jobs
+    internship_url: https://jobs.intel.com/en/search-jobs/intern
+    focus: [SWE Intern, AI/ML Intern]
+
+  - name: IBM
+    careers_url: https://www.ibm.com/careers/search
+    internship_url: https://www.ibm.com/careers/search?search=internship
+    focus: [SWE Intern, Data Science Intern]
+
+  - name: Cisco
+    careers_url: https://jobs.cisco.com/jobs/SearchJobs
+    internship_url: https://jobs.cisco.com/jobs/SearchJobs/intern
+    focus: [SWE Intern]
+
+  - name: SAP
+    careers_url: https://jobs.sap.com/search/
+    internship_url: https://jobs.sap.com/search/?q=intern
+    focus: [Developer Intern, Data roles]
+
+  - name: Infosys
+    careers_url: https://www.infosys.com/careers/
+    internship_url: https://www.infosys.com/careers/instep.html
+    focus: [InStep Internship, AI/ML roles]
